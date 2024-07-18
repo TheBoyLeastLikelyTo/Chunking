@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <time.h>
 
 void write_chunk(FILE *input_file, FILE *output_file, size_t chunk_size) {
     char *buffer = (char *)malloc(chunk_size);
@@ -23,8 +24,11 @@ void save_file_attributes(const char *file_path, const char *output_dir) {
         exit(EXIT_FAILURE);
     }
 
+    fprintf(attr_file, "FileName: %s\n", strrchr(file_path, '/') ? strrchr(file_path, '/') + 1 : file_path);
     fprintf(attr_file, "Size: %ld\n", st.st_size);
     fprintf(attr_file, "Mode: %o\n", st.st_mode);
+    fprintf(attr_file, "ModTime: %ld\n", st.st_mtime);
+
     fclose(attr_file);
 }
 

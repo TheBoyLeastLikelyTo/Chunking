@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <utime.h>
+#include <time.h>
 
 void read_chunk(FILE *chunk_file, FILE *output_file) {
     char buffer[1024];
@@ -22,13 +24,26 @@ void restore_file_attributes(const char *output_file_path, const char *input_dir
         exit(EXIT_FAILURE);
     }
 
+    char original_file_name[256];
     size_t file_size;
     int file_mode;
+    time_t mod_time;
+    fscanf(attr_file, "FileName: %s\n", original_file_name);
     fscanf(attr_file, "Size: %ld\n", &file_size);
     fscanf(attr_file, "Mode: %o\n", &file_mode);
+    fscanf(attr_file, "ModTime: %ld\n", &mod_time);
     fclose(attr_file);
 
     chmod(output_file_path, file_mode);
+
+    struct utimbuf new_times;
+    new_times.actime = time(NULL);
+    new_times.modtime = mod_time;
+    utime(output_file_path, &new_times);
+
+    char final_file_path[256];
+    snprintf(final_file_path, sizeof(final_file_path), "%s/%s", input_dir, original_file_name);
+    rename(output_file_path, final_file_path);
 }
 
 int main(int argc, char *argv[]) {
